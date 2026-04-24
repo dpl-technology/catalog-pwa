@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kiosk App</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#000000" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    #toolbar {
+      display: flex;
+      background: #333;
+      padding: 10px;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    #toolbar button {
+      margin-right: 10px;
+      padding: 10px 15px;
+      font-size: 16px;
+      color: white;
+      background: #555;
+      border: none;
+      cursor: pointer;
+    }
+
+    #toolbar button:hover {
+      background: #777;
+    }
+
+    #spacer {
+      height: 60px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="toolbar">
+  <button onclick="goHome()">Home</button>
+  <button onclick="goBack()">Back</button>
+  <button onclick="refreshPage()">Refresh</button>
+</div>
+
+<div id="spacer"></div>
+
+<script>
+  const HOME_URL = "https://deerfieldlibrary.org/kiosk";
+
+  function goHome() {
+    window.location.href = HOME_URL;
+  }
+
+  function goBack() {
+    window.history.back();
+  }
+
+  function refreshPage() {
+    window.location.reload();
+  }
+/*
+  // --- Idle Reset (ADD HERE) ---
+  let timeout;
+  const RESET_TIME = 360000; // 6 minutes
+
+  function resetTimer() {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      window.location.href = HOME_URL;
+    }, RESET_TIME);
+  }
+
+  ["click","touchstart","keydown"].forEach(evt =>
+    document.addEventListener(evt, resetTimer)
+  );
+
+  resetTimer();
+  */
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js');
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "Kiosk App",
+  "short_name": "Kiosk",
+  "start_url": "https://deerfieldlibrary.org/kiosk",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#ffffff",
+  "theme_color": "#000000"
+}
