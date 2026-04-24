@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Deerfield Public Library</title>
+  <title>Kiosk App</title>
 
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#000000" />
@@ -12,7 +12,6 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      overflow: hidden;
     }
 
     #toolbar {
@@ -38,10 +37,9 @@
       background: #777;
     }
 
-    #frame {
-      width: 100%;
-      height: calc(100vh - 50px);
-      border: none;
+    #content {
+      padding: 10px;
+      margin-top: 50px;
     }
   </style>
 </head>
@@ -55,57 +53,38 @@
     <button onclick="refreshPage()">Refresh</button>
   </div>
 
-  <!-- Content frame -->
-  <iframe id="frame" src="https://deerfieldlibrary.org/kiosk"></iframe>
+  <!-- Main content (normal page flow, no iframe) -->
+  <div id="content">
+    Loading...
+  </div>
 
-  <!-- Navigation controls -->
+  <!-- Navigation logic -->
   <script>
     const HOME_URL = "https://deerfieldlibrary.org/kiosk";
-    const frame = document.getElementById("frame");
 
     function goHome() {
-      frame.src = HOME_URL;
+      window.location.href = HOME_URL;
     }
 
     function goBack() {
-      try {
-        frame.contentWindow.history.back();
-      } catch (e) {
-        console.warn("Back navigation blocked:", e);
-      }
+      window.history.back();
     }
 
     function refreshPage() {
-      frame.contentWindow.location.reload();
+      window.location.reload();
     }
   </script>
 
-  <!-- Link interception (IMPORTANT FOR KIOSK BEHAVIOR) -->
+  <!-- Optional: ensure kiosk always starts at home if opened blank -->
   <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      const frame = document.getElementById("frame");
-
-      document.addEventListener("click", function (e) {
-        const link = e.target.closest("a");
-        if (!link) return;
-
-        const href = link.getAttribute("href");
-
-        // Ignore invalid or non-web links
-        if (!href || href.startsWith("javascript:") || href.startsWith("mailto:") || href.startsWith("tel:")) {
-          return;
-        }
-
-        // Prevent new tab / window behavior
-        e.preventDefault();
-
-        // Load inside kiosk frame
-        frame.src = href;
-      });
+    window.addEventListener("load", () => {
+      if (!window.location.href || window.location.href === "about:blank") {
+        window.location.href = HOME_URL;
+      }
     });
   </script>
 
-  <!-- Optional service worker -->
+  <!-- Service worker (optional) -->
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js');
