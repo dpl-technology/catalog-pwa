@@ -90,6 +90,21 @@
       navigator.serviceWorker.register('/service-worker.js');
     }
   </script>
+  
+  <!-- LINK INTERCEPTOR (ADD THIS HERE) -->
+<script>
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("a");
+    if (!link) return;
+
+    const href = link.getAttribute("href");
+    if (!href || href.startsWith("javascript:")) return;
+
+    e.preventDefault();
+    window.location.href = href;
+  });
+</script>
+
 
 </body>
 </html>
