@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Deerfield Public Library Catalog App</title>
+  <title>Deerfield Public Library</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#000000" />
 
   <style>
     body {
@@ -18,15 +21,21 @@
       padding: 10px;
       height: 50px;
       box-sizing: border-box;
+      align-items: center;
     }
 
     #toolbar button {
       margin-right: 10px;
       padding: 8px 12px;
+      font-size: 14px;
       color: white;
       background: #555;
       border: none;
       cursor: pointer;
+    }
+
+    #toolbar button:hover {
+      background: #777;
     }
 
     #frame {
@@ -39,49 +48,69 @@
 
 <body>
 
-<div id="toolbar">
-  <button onclick="goHome()">Home</button>
-  <button onclick="goBack()">Back</button>
-  <button onclick="refreshPage()">Refresh</button>
-</div>
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <button onclick="goHome()">Home</button>
+    <button onclick="goBack()">Back</button>
+    <button onclick="refreshPage()">Refresh</button>
+  </div>
 
-<iframe id="frame" src="https://deerfieldlibrary.org/kiosk"></iframe>
+  <!-- Content frame -->
+  <iframe id="frame" src="https://deerfieldlibrary.org/kiosk"></iframe>
 
-<script>
-  const frame = document.getElementById("frame");
-  const HOME_URL = "https://deerfieldlibrary.org/kiosk";
+  <!-- Navigation controls -->
+  <script>
+    const HOME_URL = "https://deerfieldlibrary.org/kiosk";
+    const frame = document.getElementById("frame");
 
-  function goHome() {
-    frame.src = HOME_URL;
-  }
+    function goHome() {
+      frame.src = HOME_URL;
+    }
 
-  function goBack() {
-    frame.contentWindow.history.back();
-  }
+    function goBack() {
+      try {
+        frame.contentWindow.history.back();
+      } catch (e) {
+        console.warn("Back navigation blocked:", e);
+      }
+    }
 
-  function refreshPage() {
-    frame.contentWindow.location.reload();
-  }
-  /*
-  // --- Idle Reset (ADD HERE) ---
-  let timeout;
-  const RESET_TIME = 360000; // 6 minutes
+    function refreshPage() {
+      frame.contentWindow.location.reload();
+    }
+  </script>
 
-  function resetTimer() {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      window.location.href = HOME_URL;
-    }, RESET_TIME);
-  }
+  <!-- Link interception (IMPORTANT FOR KIOSK BEHAVIOR) -->
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const frame = document.getElementById("frame");
 
-  ["click","touchstart","keydown"].forEach(evt =>
-    document.addEventListener(evt, resetTimer)
-  );
+      document.addEventListener("click", function (e) {
+        const link = e.target.closest("a");
+        if (!link) return;
 
-  resetTimer();
-  */
-</script>
+        const href = link.getAttribute("href");
+
+        // Ignore invalid or non-web links
+        if (!href || href.startsWith("javascript:") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+          return;
+        }
+
+        // Prevent new tab / window behavior
+        e.preventDefault();
+
+        // Load inside kiosk frame
+        frame.src = href;
+      });
+    });
+  </script>
+
+  <!-- Optional service worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js');
+    }
+  </script>
 
 </body>
 </html>
-
