@@ -3,15 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kiosk App</title>
-
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#000000" />
+  <title>Deerfield Public Library Catalog App</title>
 
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
+      overflow: hidden;
     }
 
     #toolbar {
@@ -20,91 +18,70 @@
       padding: 10px;
       height: 50px;
       box-sizing: border-box;
-      align-items: center;
     }
 
     #toolbar button {
       margin-right: 10px;
       padding: 8px 12px;
-      font-size: 14px;
       color: white;
       background: #555;
       border: none;
       cursor: pointer;
     }
 
-    #toolbar button:hover {
-      background: #777;
-    }
-
-    #content {
-      padding: 10px;
-      margin-top: 50px;
+    #frame {
+      width: 100%;
+      height: calc(100vh - 50px);
+      border: none;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Toolbar -->
-  <div id="toolbar">
-    <button onclick="goHome()">Home</button>
-    <button onclick="goBack()">Back</button>
-    <button onclick="refreshPage()">Refresh</button>
-  </div>
+<div id="toolbar">
+  <button onclick="goHome()">Home</button>
+  <button onclick="goBack()">Back</button>
+  <button onclick="refreshPage()">Refresh</button>
+</div>
 
-  <!-- Main content (normal page flow, no iframe) -->
-  <div id="content">
-    Loading...
-  </div>
+<iframe id="frame" src="https://deerfieldlibrary.org/kiosk"></iframe>
 
-  <!-- Navigation logic -->
-  <script>
-    const HOME_URL = "https://deerfieldlibrary.org/kiosk";
-
-    function goHome() {
-      window.location.href = HOME_URL;
-    }
-
-    function goBack() {
-      window.history.back();
-    }
-
-    function refreshPage() {
-      window.location.reload();
-    }
-  </script>
-
-  <!-- Optional: ensure kiosk always starts at home if opened blank -->
-  <script>
-    window.addEventListener("load", () => {
-      if (!window.location.href || window.location.href === "about:blank") {
-        window.location.href = HOME_URL;
-      }
-    });
-  </script>
-
-  <!-- Service worker (optional) -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js');
-    }
-  </script>
-  
-  <!-- LINK INTERCEPTOR (ADD THIS HERE) -->
 <script>
-  document.addEventListener("click", (e) => {
-    const link = e.target.closest("a");
-    if (!link) return;
+  const frame = document.getElementById("frame");
+  const HOME_URL = "https://deerfieldlibrary.org/kiosk";
 
-    const href = link.getAttribute("href");
-    if (!href || href.startsWith("javascript:")) return;
+  function goHome() {
+    frame.src = HOME_URL;
+  }
 
-    e.preventDefault();
-    window.location.href = href;
-  });
+  function goBack() {
+    frame.contentWindow.history.back();
+  }
+
+  function refreshPage() {
+    frame.contentWindow.location.reload();
+  }
+  /*
+  // --- Idle Reset (ADD HERE) ---
+  let timeout;
+  const RESET_TIME = 360000; // 6 minutes
+
+  function resetTimer() {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      window.location.href = HOME_URL;
+    }, RESET_TIME);
+  }
+
+  ["click","touchstart","keydown"].forEach(evt =>
+    document.addEventListener(evt, resetTimer)
+  );
+
+  resetTimer();
+  */
 </script>
-
 
 </body>
 </html>
+
