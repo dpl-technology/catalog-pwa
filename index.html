@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Deerfield Public Library Catalog App</title>
+  <title>Kiosk App</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#000000" />
 
   <style>
     body {
@@ -15,23 +18,50 @@
     #toolbar {
       display: flex;
       background: #333;
-      padding: 10px;
+      padding: 8px;
       height: 50px;
-      box-sizing: border-box;
+      align-items: center;
     }
 
     #toolbar button {
       margin-right: 10px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       color: white;
       background: #555;
       border: none;
       cursor: pointer;
     }
 
+    #tabs {
+      display: flex;
+      background: #222;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .tab {
+      padding: 6px 10px;
+      margin-right: 4px;
+      background: #444;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .tab.active {
+      background: #666;
+    }
+
+    .close {
+      margin-left: 6px;
+      cursor: pointer;
+      color: #ccc;
+    }
+
     #frame {
       width: 100%;
-      height: calc(100vh - 50px);
+      height: calc(100vh - 90px);
       border: none;
     }
   </style>
@@ -39,49 +69,122 @@
 
 <body>
 
-<div id="toolbar">
-  <button onclick="goHome()">Home</button>
-  <button onclick="goBack()">Back</button>
-  <button onclick="refreshPage()">Refresh</button>
-</div>
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <button onclick="goHome()">Home</button>
+    <button onclick="goBack()">Back</button>
+    <button onclick="refreshPage()">Refresh</button>
+  </div>
 
-<iframe id="frame" src="https://deerfieldlibrary.org/kiosk"></iframe>
+  <!-- Tab bar -->
+  <div id="tabs"></div>
 
-<script>
-  const frame = document.getElementById("frame");
-  const HOME_URL = "https://deerfieldlibrary.org/kiosk";
+  <!-- Content -->
+  <iframe id="frame"></iframe>
 
-  function goHome() {
-    frame.src = HOME_URL;
-  }
+  <script>
+    const HOME_URL = "https://deerfieldlibrary.org/kiosk";
 
-  function goBack() {
-    frame.contentWindow.history.back();
-  }
+    let tabs = [];
+    let activeTab = null;
 
-  function refreshPage() {
-    frame.contentWindow.location.reload();
-  }
-  /*
-  // --- Idle Reset (ADD HERE) ---
-  let timeout;
-  const RESET_TIME = 360000; // 6 minutes
+    const frame = document.getElementById("frame");
+    const tabsBar = document.getElementById("tabs");
 
-  function resetTimer() {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      window.location.href = HOME_URL;
-    }, RESET_TIME);
-  }
+    function openTab(url, title = "New Tab") {
+      const id = Date.now().toString();
 
-  ["click","touchstart","keydown"].forEach(evt =>
-    document.addEventListener(evt, resetTimer)
-  );
+      const tab = { id, url, title };
+      tabs.push(tab);
+      activeTab = id;
 
-  resetTimer();
-  */
-</script>
+      renderTabs();
+      loadTab(id);
+    }
+
+    function loadTab(id) {
+      const tab = tabs.find(t => t.id === id);
+      if (!tab) return;
+
+      activeTab = id;
+      frame.src = tab.url;
+      renderTabs();
+    }
+
+    function closeTab(id) {
+      tabs = tabs.filter(t => t.id !== id);
+
+      if (activeTab === id && tabs.length) {
+        activeTab = tabs[tabs.length - 1].id;
+        loadTab(activeTab);
+      }
+
+      if (tabs.length === 0) {
+        goHome();
+      }
+
+      renderTabs();
+    }
+
+    function renderTabs() {
+      tabsBar.innerHTML = "";
+
+      tabs.forEach(tab => {
+        const el = document.createElement("div");
+        el.className = "tab" + (tab.id === activeTab ? " active" : "");
+
+        el.textContent = tab.title;
+
+        el.onclick = () => loadTab(tab.id);
+
+        const close = document.createElement("span");
+        close.textContent = " ×";
+        close.className = "close";
+
+        close.onclick = (e) => {
+          e.stopPropagation();
+          closeTab(tab.id);
+        };
+
+        el.appendChild(close);
+        tabsBar.appendChild(el);
+      });
+    }
+
+    function goHome() {
+      openTab(HOME_URL, "Home");
+    }
+
+    function goBack() {
+      try {
+        frame.contentWindow.history.back();
+      } catch (e) {}
+    }
+
+    function refreshPage() {
+      frame.contentWindow.location.reload();
+    }
+
+    // Initial load
+    window.onload = () => {
+      goHome();
+    };
+  </script>
+
+  <!-- Intercept links (same-origin only) -->
+  <script>
+    document.addEventListener("click", (e) => {
+      const link = e.target.closest("a");
+      if (!link) return;
+
+      const href = link.getAttribute("href");
+      if (!href || href.startsWith("javascript:")) return;
+
+      // Only intercept links clicked from THIS app
+      e.preventDefault();
+      openTab(href, href);
+    });
+  </script>
 
 </body>
 </html>
-
